@@ -208,7 +208,7 @@
     }
     
     .fix-records-btn {
-      background-color: #ff9800;
+      background-color: #EAE0D7;
       color: white;
       padding: 10px 15px;
       border: none;
@@ -267,7 +267,7 @@
             <button id="weekly-report-btn" class="report-button">產生週報表</button>
             <button id="monthly-report-btn" class="report-button">產生月報表</button>
         </div>
-        <button id="fix-records-btn" class="fix-records-btn">修復現有記錄</button>
+        <button id="fix-records-btn" class="fix-records-btn">修復歷史記錄</button>
         <button id="clear-data-btn" class="clear-button">清除所有資料</button>
         <button id="logout-btn" class="logout-btn">登出系統</button>
     </div>
@@ -292,7 +292,7 @@
             </table>
         </div>
     </div>
-    <div>v4.1</div>
+    <div>v 4.1.2</div>
   </div>
 
   <script>
@@ -332,7 +332,7 @@
             // 處理日期格式 (YYYY/MM/DD 或 YYYY-MM-DD)
             const dateMatch = dateStr.match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
             if (!dateMatch) {
-                console.error('無效的日期格式:', dateStr);
+                console.error('無效的日期格式：', dateStr);
                 return null;
             }
             
@@ -374,13 +374,13 @@
             
             // 檢查日期是否有效
             if (isNaN(date.getTime())) {
-                console.error('無效的日期時間組合:', dateStr, timeStr);
+                console.error('無效的日期時間組合：', dateStr, timeStr);
                 return null;
             }
             
             return date;
         } catch (e) {
-            console.error('解析日期時間出錯:', e, dateStr, timeStr);
+            console.error('解析日期時間出錯：', e, dateStr, timeStr);
             return null;
         }
     }
@@ -410,7 +410,7 @@
         if (!clockInTime || !clockOutTime || 
             !(clockInTime instanceof Date) || !(clockOutTime instanceof Date) ||
             isNaN(clockInTime.getTime()) || isNaN(clockOutTime.getTime())) {
-            console.error('無效的時間參數:', clockInTime, clockOutTime);
+            console.error('無效的時間參數：', clockInTime, clockOutTime);
             return 0;
         }
         
@@ -583,7 +583,7 @@
         updateRecordsDisplay();
         
         // 顯示通知
-        alert(`成功打卡上班！時間: ${clockInTime.toLocaleTimeString('zh-TW')}`);
+        alert(`成功打卡上班！時間： ${clockInTime.toLocaleTimeString('zh-TW')}`);
     });
 
     // 下班打卡
@@ -637,7 +637,7 @@
         isClockIn = false;
         
         // 顯示通知
-        alert(`成功打卡下班！時間: ${clockOutTime.toLocaleTimeString('zh-TW')}\n實際工作時間: ${workHours.toFixed(2)} 小時\n計算工時: ${roundedHours.toFixed(1)} 小時\n薪資: NT$${wage.toFixed(0)}`);
+        alert(`成功打卡下班！時間： ${clockOutTime.toLocaleTimeString('zh-TW')}\n實際工作時間： ${workHours.toFixed(2)} 小時\n計算工時： ${roundedHours.toFixed(1)} 小時\n薪資： NT$${wage.toFixed(0)}`);
     });
 
     // 修復記錄按鈕
@@ -722,7 +722,7 @@
                     const recordDate = convertToDateObj(record.date, "00:00:00");
                     return recordDate && recordDate >= startOfWeek && record.clockOutTime;
                 } catch (e) {
-                    console.error('日期解析錯誤:', e, record.date);
+                    console.error('日期解析錯誤：', e, record.date);
                     return false;
                 }
             });
@@ -741,7 +741,7 @@
                            recordDate.getFullYear() === now.getFullYear() && 
                            record.clockOutTime;
                 } catch (e) {
-                    console.error('日期解析錯誤:', e, record.date);
+                    console.error('日期解析錯誤：', e, record.date);
                     return false;
                 }
             });
@@ -759,14 +759,14 @@
         
         // 產生報表內容
         let reportContent = `${reportTitle}\n\n`;
-        reportContent += `總工作時數: ${totalHours.toFixed(1)} 小時\n`;
-        reportContent += `總薪資: NT$${totalWage.toFixed(0)}\n\n`;
-        reportContent += '詳細記錄:\n';
+        reportContent += `總工作時數： ${totalHours.toFixed(1)} 小時\n`;
+        reportContent += `總薪資： NT$${totalWage.toFixed(0)}\n\n`;
+        reportContent += '詳細記錄：\n';
         
         filteredRecords.forEach(record => {
             const hoursDisplay = record.hoursWorked || '0.0';
             const wageDisplay = record.wage || '0';
-            reportContent += `日期: ${record.date}, 上班: ${record.clockInTime}, 下班: ${record.clockOutTime}, 時數: ${hoursDisplay}, 薪資: NT$${wageDisplay}\n`;
+            reportContent += `日期： ${record.date}, 上班： ${record.clockInTime}, 下班： ${record.clockOutTime}, 時數： ${hoursDisplay}, 薪資： NT$${wageDisplay}\n`;
         });
         
         // 顯示報表
@@ -844,7 +844,7 @@
                 isClockIn = true;
                 
                 // 更新UI
-                statusElement.textContent = `上班中 - 打卡時間：${lastRecord.clockInTime}`;
+                statusElement.textContent = `上班中 - 打卡時間： ${lastRecord.clockInTime}`;
                 statusElement.className = 'status clocked-in';
                 clockInBtn.disabled = true;
                 clockOutBtn.disabled = false;
