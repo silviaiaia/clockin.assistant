@@ -230,13 +230,13 @@
       <input type="text" id="username" placeholder="Type：admin">
       <input type="password" id="password" placeholder="Type：123456">
       <div class="error-message" id="error-message">Incorrect username or password. Please try again.</div>
-      <button class="login-button" id="login-button">登入</button>
+      <button class="login-button" id="login-button">Login</button>
     </div>
   </div>
 
   <!-- 打卡系統容器，登入後顯示 -->
   <div class="container" id="punch-container">
-    <h1>Clock-in ⏳</h1>
+    <h1>Clock-in Ststem⏳</h1>
     <!-- 時間顯示卡片 -->
     <div class="card">
         <div>Current Time</div>
@@ -323,70 +323,72 @@
     // let clockInTime = null; // 這個變數不再需要儲存上次打卡的時間，因為會直接從 localStorage 獲取
     let isClockIn = false; // 只用來判斷是否處於打卡上班狀態
 
-// 改進的日期時間轉換函數 (已經能處理英文AM/PM，無需特別修改)
+// 改進的日期時間轉換函數
 function convertToDateObj(dateStr, timeStr) {
     try {
         // 檢查輸入
-        if (!dateStr || !timeStr) return null;
-
-        // 處理日期格式 (YYYY/MM/DD 或 YYYY-MM-DD)
-        const dateMatch = dateStr.match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
-        if (!dateMatch) {
-            console.error('無效的日期格式：', dateStr);
+        if (!dateStr || !timeStr) {
+            console.warn('日期或時間字串為空:', dateStr, timeStr);
             return null;
         }
 
-        const year = parseInt(dateMatch[1], 10);
-        const month = parseInt(dateMatch[2], 10) - 1; // 月份從0開始
-        const day = parseInt(dateMatch[3], 10);
+        let year, month, day;
 
-        // 處理時間格式
-        let hours = 0, minutes = 0, seconds = 0;
+        // 嘗試解析日期格式 (MM/DD/YYYY 或 YYYY/MM/DD 或 YYYY-MM-DD)
+        const dateMatchMDY = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); // MM/DD/YYYY
+        const dateMatchYMD = dateStr.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); // YYYY/MM/DD 或 YYYY-MM-DD
 
-        // 處理包含上午/下午的時間格式 (會判斷大小寫不拘 am/pm)
-        if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) {
-            const ampmMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)/i); // 修正正則表達式以匹配 AM/PM
-            if (ampmMatch) {
-                const ampm = ampmMatch[4].toLowerCase();
-                hours = parseInt(ampmMatch[1], 10);
-                minutes = parseInt(ampmMatch[2], 10);
-                seconds = ampmMatch[3] ? parseInt(ampmMatch[3], 10) : 0;
-
-                // 調整12小時制到24小時制
-                if (ampm === 'pm' && hours < 12) {
-                    hours += 12;
-                } else if (ampm === 'am' && hours === 12) {
-                    hours = 0;
-                }
-            } else {
-                console.error('無效的上午/下午時間格式：', timeStr);
-                return null;
-            }
+        if (dateMatchMDY) {
+            month = parseInt(dateMatchMDY[1], 10) - 1; // 月份從0開始
+            day = parseInt(dateMatchMDY[2], 10);
+            year = parseInt(dateMatchMDY[3], 10);
+        } else if (dateMatchYMD) {
+            year = parseInt(dateMatchYMD[1], 10);
+            month = parseInt(dateMatchYMD[2], 10) - 1; // 月份從0開始
+            day = parseInt(dateMatchYMD[3], 10);
         } else {
-            // 處理24小時制時間格式
-            const timeMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
-            if (timeMatch) {
-                hours = parseInt(timeMatch[1], 10);
-                minutes = parseInt(timeMatch[2], 10);
-                seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
-            } else {
-                console.error('無效的24小時時間格式：', timeStr);
-                return null;
-            }
+            console.error('無法識別的日期格式：', dateStr);
+            return null;
         }
 
-        // 建立並返回Date對象
+        let hours = 0, minutes = 0, seconds = 0;
+
+        // 嘗試解析時間格式
+        const ampmMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)/i); // 12小時制 (e.g., "9:05:07 AM")
+        const timeMatch24 = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/); // 24小時制 (e.g., "09:05:07")
+
+        if (ampmMatch) {
+            const ampm = ampmMatch[4].toLowerCase();
+            hours = parseInt(ampmMatch[1], 10);
+            minutes = parseInt(ampmMatch[2], 10);
+            seconds = ampmMatch[3] ? parseInt(ampmMatch[3], 10) : 0;
+
+            if (ampm === 'pm' && hours < 12) {
+                hours += 12;
+            } else if (ampm === 'am' && hours === 12) {
+                hours = 0; // Midnight (12 AM) is 0 hours
+            }
+        } else if (timeMatch24) {
+            hours = parseInt(timeMatch24[1], 10);
+            minutes = parseInt(timeMatch24[2], 10);
+            seconds = timeMatch24[3] ? parseInt(timeMatch24[3], 10) : 0;
+        } else {
+            console.error('無法識別的時間格式：', timeStr);
+            return null;
+        }
+
+        // 建立並返回 Date 對象
         const date = new Date(year, month, day, hours, minutes, seconds);
 
         // 檢查日期是否有效
         if (isNaN(date.getTime())) {
-            console.error('無效的日期時間組合：', dateStr, timeStr);
+            console.error('無效的日期時間組合：', dateStr, timeStr, ' -> 無法構建有效日期');
             return null;
         }
 
         return date;
     } catch (e) {
-        console.error('解析日期時間出錯：', e, dateStr, timeStr);
+        console.error('解析日期時間出錯：', e, '日期:', dateStr, '時間:', timeStr);
         return null;
     }
 }
