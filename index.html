@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>打卡系統</title>
+  <title>Clock-in System</title>
   <style>
     body {
         font-family: Microsoft JhengHei, Times New Roman;
@@ -224,12 +224,12 @@
 
   <!-- 登入介面 -->
   <div class="login-container" id="login-container">
-    <h2>打卡系統登入</h2>
+    <h2>Login</h2>
     
     <div class="login-form">
-      <input type="text" id="username" placeholder="請輸入：admin">
-      <input type="password" id="password" placeholder="請輸入：123456">
-      <div class="error-message" id="error-message">帳號或密碼錯誤，請重試。</div>
+      <input type="text" id="username" placeholder="Type：admin">
+      <input type="password" id="password" placeholder="Type：123456">
+      <div class="error-message" id="error-message">Incorrect username or password. Please try again.</div>
       <button class="login-button" id="login-button">登入</button>
     </div>
   </div>
@@ -239,51 +239,51 @@
     <h1>打卡 ⏳</h1>
     <!-- 時間顯示卡片 -->
     <div class="card">
-        <div>當前時間</div>
+        <div>Current Time</div>
         <div class="time-display" id="current-time">00:00:00</div>
-        <div class="status" id="status">未打卡</div>
+        <div class="status" id="status">Status：Not clocked in</div>
     </div>
 
     <!-- 時薪設置卡片 -->
     <div class="card">
-        <div>設置</div>
+        <div>Settings</div>
         <div class="settings">
-            <label for="hourly-rate">時薪：NT</label>
-            <input type="number" id="hourly-rate" value="180" min="1">
+            <label for="hourly-rate">Hourly wage：NT</label>
+            <input type="number" id="hourly-rate" value="190" min="1">
         </div>
     </div>
 
     <!-- 打卡按鈕卡片 -->
     <div class="card">
         <div class="button-container">
-            <button id="clock-in-btn" class="clock-in">打卡上班</button>
-            <button id="clock-out-btn" class="clock-out" disabled>打卡下班</button>
+            <button id="clock-in-btn" class="clock-in">Clock-in</button>
+            <button id="clock-out-btn" class="clock-out" disabled>Clock-out</button>
         </div>
     </div>
 
     <!-- 報表按鈕卡片 -->
     <div class="card">
         <div class="report-buttons">
-            <button id="weekly-report-btn" class="report-button">產生週報表</button>
-            <button id="monthly-report-btn" class="report-button">產生月報表</button>
+            <button id="weekly-report-btn" class="report-button">Export weekly report</button>
+            <button id="monthly-report-btn" class="report-button">Export monthly report</button>
         </div>
-        <button id="fix-records-btn" class="fix-records-btn">修復歷史記錄</button>
-        <button id="clear-data-btn" class="clear-button">清除所有資料</button>
-        <button id="logout-btn" class="logout-btn">登出系統</button>
+        <button id="fix-records-btn" class="fix-records-btn">Fix records</button>
+        <button id="clear-data-btn" class="clear-button">Clear all data</button>
+        <button id="logout-btn" class="logout-btn">Logout</button>
     </div>
 
     <!-- 記錄列表卡片 -->
     <div class="card">
-        <h3>最近打卡記錄</h3>
+        <h3>Recent records</h3>
         <div id="records-container">
             <table id="records-table">
                 <thead>
                     <tr>
-                        <th>日期</th>
-                        <th>上班時間</th>
-                        <th>下班時間</th>
-                        <th>工時</th>
-                        <th>薪資</th>
+                        <th>Date</th>
+                        <th>Clock-in Time</th>
+                        <th>Clock-out Time</th>
+                        <th>Work hours</th>
+                        <th>Wage</th>
                     </tr>
                 </thead>
                 <tbody id="records-body">
@@ -558,7 +558,7 @@
         isClockIn = true;
 
         // 更新狀態
-        statusElement.textContent = `上班中 - 打卡時間: ${now.toLocaleTimeString('zh-TW')}`;
+        statusElement.textContent = `Clocked in：In Work Mode - Time：${now.toLocaleTimeString('zh-TW')}`;
         statusElement.className = 'status clocked-in';
 
         // 禁用/啟用按鈕
@@ -583,7 +583,7 @@
         updateRecordsDisplay();
 
         // 顯示通知
-        alert(`成功打卡上班！時間： ${now.toLocaleTimeString('zh-TW')}`);
+        alert(`Clocked in：In Work Mode - Time：${now.toLocaleTimeString('zh-TW')}`);
     });
 
     // 下班打卡
@@ -597,7 +597,7 @@
         const lastRecordIndex = records.findIndex(record => record.clockInTime && !record.clockOutTime);
 
         if (lastRecordIndex === -1) {
-            alert('沒有找到進行中的上班打卡記錄。');
+            alert('No clok-in records');
             return;
         }
 
@@ -645,14 +645,14 @@
         isClockIn = false; // 將打卡狀態設置為未打卡
 
         // 顯示通知
-        alert(`成功打卡下班！時間： ${clockOutTime.toLocaleTimeString('zh-TW')}\n實際工作時間： ${workHours.toFixed(2)} 小時\n計算工時： ${roundedHours.toFixed(1)} 小時\n薪資： NT$${wage.toFixed(0)}`);
+        alert(`Clocked out：Freedom unlocked！ - Time： ${clockOutTime.toLocaleTimeString('zh-TW')}\nTotal work hours： ${workHours.toFixed(2)} hours\nRounded work hours： ${roundedHours.toFixed(1)} hours\nWage： NT$${wage.toFixed(0)}`);
     });
 
     // 修復記錄按鈕
     fixRecordsBtn.addEventListener('click', function() {
-        if (confirm('這將重新計算所有打卡記錄的工時和薪資。確定要繼續嗎？')) {
+        if (confirm('This is going to recount all the records, still continue?')) {
             const fixedCount = fixAllRecords();
-            alert(`所有記錄已修復並重新計算！共修復了 ${fixedCount} 筆記錄。`);
+            alert(`All records are fixed and recounted. Recounted ${fixedCount} records。`);
         }
     });
 
@@ -706,7 +706,7 @@
     function generateReport(type) {
         const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
         if (records.length === 0) {
-            alert('沒有工作記錄可供產生報表！');
+            alert('No records.');
             return;
         }
 
@@ -722,7 +722,7 @@
             startOfWeek.setDate(now.getDate() - now.getDay());
             startOfWeek.setHours(0, 0, 0, 0);
 
-            reportTitle = `週報表 (${startOfWeek.toLocaleDateString('zh-TW')} 至 ${now.toLocaleDateString('zh-TW')})`;
+            reportTitle = `Weekly report (${startOfWeek.toLocaleDateString('zh-TW')} to ${now.toLocaleDateString('zh-TW')})`;
 
             // 過濾本週的記錄
             filteredRecords = records.filter(record => {
@@ -730,7 +730,7 @@
                     const recordDate = convertToDateObj(record.date, "00:00:00");
                     return recordDate && recordDate >= startOfWeek && record.clockOutTime;
                 } catch (e) {
-                    console.error('日期解析錯誤：', e, record.date);
+                    console.error('date error：', e, record.date);
                     return false;
                 }
             });
@@ -738,7 +738,7 @@
             // 計算本月的開始日期
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-            reportTitle = `月報表 (${startOfMonth.toLocaleDateString('zh-TW')} 至 ${now.toLocaleDateString('zh-TW')})`;
+            reportTitle = `monthly report (${startOfMonth.toLocaleDateString('zh-TW')} to ${now.toLocaleDateString('zh-TW')})`;
 
             // 過濾本月的記錄
             filteredRecords = records.filter(record => {
@@ -749,7 +749,7 @@
                         recordDate.getFullYear() === now.getFullYear() &&
                         record.clockOutTime;
                 } catch (e) {
-                    console.error('日期解析錯誤：', e, record.date);
+                    console.error('date error：', e, record.date);
                     return false;
                 }
             });
@@ -767,14 +767,14 @@
 
         // 產生報表內容
         let reportContent = `${reportTitle}\n\n`;
-        reportContent += `總工作時數： ${totalHours.toFixed(1)} 小時\n`;
-        reportContent += `總薪資： NT$${totalWage.toFixed(0)}\n\n`;
-        reportContent += '詳細記錄：\n';
+        reportContent += `Total work hours： ${totalHours.toFixed(1)} 小時\n`;
+        reportContent += `Total wage： NT$${totalWage.toFixed(0)}\n\n`;
+        reportContent += 'Details：\n';
 
         filteredRecords.forEach(record => {
             const hoursDisplay = record.hoursWorked || '0.0';
             const wageDisplay = record.wage || '0';
-            reportContent += `日期： ${record.date}, 上班： ${record.clockInTime}, 下班： ${record.clockOutTime}, 時數： ${hoursDisplay}, 薪資： NT$${wageDisplay}\n`;
+            reportContent += `Date： ${record.date}, Clock-in Time： ${record.clockInTime}, Clock-out Time： ${record.clockOutTime}, Hours： ${hoursDisplay}, Wage： NT$${wageDisplay}\n`;
         });
 
         // 顯示報表
@@ -785,7 +785,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${type === 'week' ? '週報表' : '月報表'}_${now.toLocaleDateString('zh-TW').replace(/\//g, '-')}.txt`;
+        a.download = `${type === 'week' ? 'weekly report' : 'monthly report'}_${now.toLocaleDateString('zh-TW').replace(/\//g, '-')}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -794,7 +794,7 @@
 
     // 清除資料
     clearDataBtn.addEventListener('click', function() {
-        if (confirm('確定要清除所有打卡記錄嗎？此操作無法復原！')) {
+        if (confirm('Are you sure you want to delete all clock-in records? This action cannot be undone!')) {
             localStorage.removeItem('workRecords');
             updateRecordsDisplay();
             alert('所有記錄已清除！');
@@ -802,7 +802,7 @@
             isClockIn = false;
             clockInBtn.disabled = false;
             clockOutBtn.disabled = true;
-            statusElement.textContent = '未打卡';
+            statusElement.textContent = 'Status：Not clocked in';
             statusElement.className = 'status';
         }
     });
@@ -862,14 +862,14 @@
                 clockOutBtn.disabled = false;
             } else {
                 isClockIn = false; // 如果最後一筆記錄已下班，則設置為未打卡
-                statusElement.textContent = '未打卡';
+                statusElement.textContent = 'Status: Not clocked in';
                 statusElement.className = 'status';
                 clockInBtn.disabled = false;
                 clockOutBtn.disabled = true;
             }
         } else {
             isClockIn = false; // 如果沒有任何記錄，則為未打卡
-            statusElement.textContent = '未打卡';
+            statusElement.textContent = 'Status: Not clocked in';
             statusElement.className = 'status';
             clockInBtn.disabled = false;
             clockOutBtn.disabled = true;
