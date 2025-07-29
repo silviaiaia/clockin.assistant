@@ -236,7 +236,7 @@
 
   <!-- 打卡系統容器，登入後顯示 -->
   <div class="container" id="punch-container">
-    <h1>打卡 ⏳</h1>
+    <h1>Clock-in ⏳</h1>
     <!-- 時間顯示卡片 -->
     <div class="card">
         <div>Current Time</div>
@@ -344,8 +344,8 @@
             let hours = 0, minutes = 0, seconds = 0;
 
             // 處理包含上午/下午的時間格式
-            if (timeStr.includes('上午') || timeStr.includes('下午')) {
-                const ampmMatch = timeStr.match(/(上午|下午)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+            if (timeStr.includes('am') || timeStr.includes('pm')) {
+                const ampmMatch = timeStr.match(/(am|pm)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
                 if (ampmMatch) {
                     const ampm = ampmMatch[1];
                     hours = parseInt(ampmMatch[2], 10);
@@ -353,9 +353,9 @@
                     seconds = ampmMatch[4] ? parseInt(ampmMatch[4], 10) : 0;
 
                     // 調整12小時制到24小時制
-                    if (ampm === '下午' && hours < 12) {
+                    if (ampm === 'pm' && hours < 12) {
                         hours += 12;
-                    } else if (ampm === '上午' && hours === 12) {
+                    } else if (ampm === 'am' && hours === 12) {
                         hours = 0;
                     }
                 }
@@ -625,7 +625,7 @@
         const wage = roundToHundred(roundedHours * hourlyRate);
 
         // 更新狀態
-        statusElement.textContent = '未打卡';
+        statusElement.textContent = 'Status：Not clocked in';
         statusElement.className = 'status';
 
         // 禁用/啟用按鈕
