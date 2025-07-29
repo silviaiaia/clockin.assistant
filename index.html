@@ -323,67 +323,73 @@
     // let clockInTime = null; // 這個變數不再需要儲存上次打卡的時間，因為會直接從 localStorage 獲取
     let isClockIn = false; // 只用來判斷是否處於打卡上班狀態
 
-    // 改進的日期時間轉換函數
-    function convertToDateObj(dateStr, timeStr) {
-        try {
-            // 檢查輸入
-            if (!dateStr || !timeStr) return null;
+// 改進的日期時間轉換函數 (已經能處理英文AM/PM，無需特別修改)
+function convertToDateObj(dateStr, timeStr) {
+    try {
+        // 檢查輸入
+        if (!dateStr || !timeStr) return null;
 
-            // 處理日期格式 (YYYY/MM/DD 或 YYYY-MM-DD)
-            const dateMatch = dateStr.match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
-            if (!dateMatch) {
-                console.error('無效的日期格式：', dateStr);
-                return null;
-            }
-
-            const year = parseInt(dateMatch[1], 10);
-            const month = parseInt(dateMatch[2], 10) - 1; // 月份從0開始
-            const day = parseInt(dateMatch[3], 10);
-
-            // 處理時間格式
-            let hours = 0, minutes = 0, seconds = 0;
-
-            // 處理包含上午/下午的時間格式
-            if (timeStr.includes('am') || timeStr.includes('pm')) {
-                const ampmMatch = timeStr.match(/(am|pm)\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
-                if (ampmMatch) {
-                    const ampm = ampmMatch[1];
-                    hours = parseInt(ampmMatch[2], 10);
-                    minutes = parseInt(ampmMatch[3], 10);
-                    seconds = ampmMatch[4] ? parseInt(ampmMatch[4], 10) : 0;
-
-                    // 調整12小時制到24小時制
-                    if (ampm === 'pm' && hours < 12) {
-                        hours += 12;
-                    } else if (ampm === 'am' && hours === 12) {
-                        hours = 0;
-                    }
-                }
-            } else {
-                // 處理24小時制時間格式
-                const timeMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
-                if (timeMatch) {
-                    hours = parseInt(timeMatch[1], 10);
-                    minutes = parseInt(timeMatch[2], 10);
-                    seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
-                }
-            }
-
-            // 建立並返回Date對象
-            const date = new Date(year, month, day, hours, minutes, seconds);
-
-            // 檢查日期是否有效
-            if (isNaN(date.getTime())) {
-                console.error('無效的日期時間組合：', dateStr, timeStr);
-                return null;
-            }
-
-            return date;
-        } catch (e) {
-            console.error('解析日期時間出錯：', e, dateStr, timeStr);
+        // 處理日期格式 (YYYY/MM/DD 或 YYYY-MM-DD)
+        const dateMatch = dateStr.match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
+        if (!dateMatch) {
+            console.error('無效的日期格式：', dateStr);
             return null;
         }
+
+        const year = parseInt(dateMatch[1], 10);
+        const month = parseInt(dateMatch[2], 10) - 1; // 月份從0開始
+        const day = parseInt(dateMatch[3], 10);
+
+        // 處理時間格式
+        let hours = 0, minutes = 0, seconds = 0;
+
+        // 處理包含上午/下午的時間格式 (會判斷大小寫不拘 am/pm)
+        if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) {
+            const ampmMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)/i); // 修正正則表達式以匹配 AM/PM
+            if (ampmMatch) {
+                const ampm = ampmMatch[4].toLowerCase();
+                hours = parseInt(ampmMatch[1], 10);
+                minutes = parseInt(ampmMatch[2], 10);
+                seconds = ampmMatch[3] ? parseInt(ampmMatch[3], 10) : 0;
+
+                // 調整12小時制到24小時制
+                if (ampm === 'pm' && hours < 12) {
+                    hours += 12;
+                } else if (ampm === 'am' && hours === 12) {
+                    hours = 0;
+                }
+            } else {
+                console.error('無效的上午/下午時間格式：', timeStr);
+                return null;
+            }
+        } else {
+            // 處理24小時制時間格式
+            const timeMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+            if (timeMatch) {
+                hours = parseInt(timeMatch[1], 10);
+                minutes = parseInt(timeMatch[2], 10);
+                seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+            } else {
+                console.error('無效的24小時時間格式：', timeStr);
+                return null;
+            }
+        }
+
+        // 建立並返回Date對象
+        const date = new Date(year, month, day, hours, minutes, seconds);
+
+        // 檢查日期是否有效
+        if (isNaN(date.getTime())) {
+            console.error('無效的日期時間組合：', dateStr, timeStr);
+            return null;
+        }
+
+        return date;
+    } catch (e) {
+        console.error('解析日期時間出錯：', e, dateStr, timeStr);
+        return null;
     }
+}
 
     // 將小時數向下取整到最接近的0.5小時（未滿半小時不計）
     function roundToHalfHour(hours) {
@@ -542,111 +548,116 @@
         }
     });
 
-    // 更新當前時間
-    function updateCurrentTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('zh-TW');
-        document.getElementById("current-time").textContent = timeString;
-    }
+// 更新當前時間
+function updateCurrentTime() {
+    const now = new Date();
+    // 使用 'en-US' 語言環境，並指定選項來顯示 12 小時制和 AM/PM
+    const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    document.getElementById("current-time").textContent = timeString;
+}
 
-    setInterval(updateCurrentTime, 1000);
-    updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+updateCurrentTime();
 
     // 上班打卡
-    clockInBtn.addEventListener('click', function() {
-        const now = new Date();
-        isClockIn = true;
+clockInBtn.addEventListener('click', function() {
+    const now = new Date();
+    isClockIn = true;
 
-        // 更新狀態
-        statusElement.textContent = `Clocked in：In Work Mode - Time：${now.toLocaleTimeString('zh-TW')}`;
-        statusElement.className = 'status clocked-in';
+    const clockInTimeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    const clockInDateString = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-        // 禁用/啟用按鈕
-        clockInBtn.disabled = true;
-        clockOutBtn.disabled = false;
+    // 更新狀態
+    statusElement.textContent = `Clocked in: In Work Mode - Time: ${clockInTimeString}`;
+    statusElement.className = 'status clocked-in';
 
-        // 保存記錄
-        const record = {
-            date: now.toLocaleDateString('zh-TW'),
-            clockInTime: now.toLocaleTimeString('zh-TW'),
-            clockOutTime: null,
-            hoursWorked: null,
-            wage: null
-        };
+    // 禁用/啟用按鈕
+    clockInBtn.disabled = true;
+    clockOutBtn.disabled = false;
 
-        // 獲取現有記錄
-        let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-        records.push(record);
-        localStorage.setItem('workRecords', JSON.stringify(records));
+    // 保存記錄
+    const record = {
+        date: clockInDateString, // 日期也改為英文格式 (MM/DD/YYYY)
+        clockInTime: clockInTimeString,
+        clockOutTime: null,
+        hoursWorked: null,
+        wage: null
+    };
 
-        // 更新顯示
-        updateRecordsDisplay();
+    // 獲取現有記錄
+    let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    records.push(record);
+    localStorage.setItem('workRecords', JSON.stringify(records));
 
-        // 顯示通知
-        alert(`Clocked in：In Work Mode - Time：${now.toLocaleTimeString('zh-TW')}`);
-    });
+    // 更新顯示
+    updateRecordsDisplay();
 
-    // 下班打卡
-    clockOutBtn.addEventListener('click', function() {
-        if (!isClockIn) return; // 如果沒有打卡上班，則不執行下班操作
+    // 顯示通知
+    alert(`Clocked in: In Work Mode - Time: ${clockInTimeString}`);
+});
 
-        const clockOutTime = new Date();
+   // 下班打卡
+clockOutBtn.addEventListener('click', function() {
+    if (!isClockIn) return;
 
-        // 獲取現有記錄並找到最後一筆未打下班的記錄
-        let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-        const lastRecordIndex = records.findIndex(record => record.clockInTime && !record.clockOutTime);
+    const clockOutTime = new Date();
 
-        if (lastRecordIndex === -1) {
-            alert('No clok-in records');
-            return;
-        }
+    // 獲取現有記錄並找到最後一筆未打下班的記錄
+    let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    const lastRecordIndex = records.findIndex(record => record.clockInTime && !record.clockOutTime);
 
-        let lastRecord = records[lastRecordIndex];
+    if (lastRecordIndex === -1) {
+        alert('No clock-in records found to clock out from.');
+        return;
+    }
 
-        // 從記錄中獲取上班時間的 Date 物件
-        const clockInDateObj = convertToDateObj(lastRecord.date, lastRecord.clockInTime);
+    let lastRecord = records[lastRecordIndex];
 
-        if (!clockInDateObj) {
-            console.error('無法解析上班打卡時間，無法計算工時。');
-            alert('上班打卡時間無效，無法計算工時。');
-            return;
-        }
+    // 從記錄中獲取上班時間的 Date 物件
+    const clockInDateObj = convertToDateObj(lastRecord.date, lastRecord.clockInTime);
 
-        // 計算工時
-        const workHours = calculateWorkHours(clockInDateObj, clockOutTime);
+    if (!clockInDateObj) {
+        console.error('Unable to parse clock-in time, cannot calculate work hours.');
+        alert('Invalid clock-in time, unable to calculate work hours.');
+        return;
+    }
 
-        // 將工時四捨五入到最接近的0.5小時
-        const roundedHours = roundToHalfHour(workHours);
+    // 計算工時
+    const workHours = calculateWorkHours(clockInDateObj, clockOutTime);
 
-        // 獲取時薪，確保有效
-        const hourlyRate = parseFloat(hourlyRateInput.value) || 180;
+    // 將工時四捨五入到最接近的0.5小時
+    const roundedHours = roundToHalfHour(workHours);
 
-        // 計算薪資並四捨五入到最接近的100倍數
-        const wage = roundToHundred(roundedHours * hourlyRate);
+    // 獲取時薪，確保有效
+    const hourlyRate = parseFloat(hourlyRateInput.value) || 180;
 
-        // 更新狀態
-        statusElement.textContent = 'Status：Not clocked in';
-        statusElement.className = 'status';
+    // 計算薪資並四捨五入到最接近的100倍數
+    const wage = roundToHundred(roundedHours * hourlyRate);
 
-        // 禁用/啟用按鈕
-        clockInBtn.disabled = false;
-        clockOutBtn.disabled = true;
+    // 更新狀態
+    statusElement.textContent = 'Status: Not clocked in';
+    statusElement.className = 'status';
 
-        // 更新記錄
-        lastRecord.clockOutTime = clockOutTime.toLocaleTimeString('zh-TW');
-        lastRecord.hoursWorked = roundedHours.toFixed(1);
-        lastRecord.wage = wage.toFixed(0);
-        localStorage.setItem('workRecords', JSON.stringify(records));
+    // 禁用/啟用按鈕
+    clockInBtn.disabled = false;
+    clockOutBtn.disabled = true;
 
-        // 更新顯示
-        updateRecordsDisplay();
+    // 更新記錄
+    lastRecord.clockOutTime = clockOutTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+    lastRecord.hoursWorked = roundedHours.toFixed(1);
+    lastRecord.wage = wage.toFixed(0);
+    localStorage.setItem('workRecords', JSON.stringify(records));
 
-        // 重置狀態
-        isClockIn = false; // 將打卡狀態設置為未打卡
+    // 更新顯示
+    updateRecordsDisplay();
 
-        // 顯示通知
-        alert(`Clocked out：Freedom unlocked！ - Time： ${clockOutTime.toLocaleTimeString('zh-TW')}\nTotal work hours： ${workHours.toFixed(2)} hours\nRounded work hours： ${roundedHours.toFixed(1)} hours\nWage： NT$${wage.toFixed(0)}`);
-    });
+    // 重置狀態
+    isClockIn = false;
+
+    // 顯示通知
+    alert(`Clocked out: Freedom unlocked! - Time: ${lastRecord.clockOutTime}\nTotal work hours: ${workHours.toFixed(2)} hours\nRounded work hours: ${roundedHours.toFixed(1)} hours\nWage: NT$${wage.toFixed(0)}`);
+});
+
 
     // 修復記錄按鈕
     fixRecordsBtn.addEventListener('click', function() {
@@ -693,104 +704,106 @@
         return fixedCount;
     }
 
-    // 報表功能
-    weeklyReportBtn.addEventListener('click', function() {
-        generateReport('week');
-    });
+    // 報表功能 (修改 generateReport 函式)
+weeklyReportBtn.addEventListener('click', function() {
+    generateReport('week');
+});
 
-    monthlyReportBtn.addEventListener('click', function() {
-        generateReport('month');
-    });
+monthlyReportBtn.addEventListener('click', function() {
+    generateReport('month');
+});
 
     // 產生報表
-    function generateReport(type) {
-        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-        if (records.length === 0) {
-            alert('No records.');
-            return;
-        }
+function generateReport(type) {
+    const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    if (records.length === 0) {
+        alert('No records.');
+        return;
+    }
 
-        const now = new Date();
-        let filteredRecords = [];
-        let totalHours = 0;
-        let totalWage = 0;
-        let reportTitle = '';
+    const now = new Date();
+    let filteredRecords = [];
+    let totalHours = 0;
+    let totalWage = 0;
+    let reportTitle = '';
 
-        if (type === 'week') {
-            // 計算本週的開始日期（週日）
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay());
-            startOfWeek.setHours(0, 0, 0, 0);
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
 
-            reportTitle = `Weekly report (${startOfWeek.toLocaleDateString('zh-TW')} to ${now.toLocaleDateString('zh-TW')})`;
+    if (type === 'week') {
+        // 計算本週的開始日期（週日）
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
 
-            // 過濾本週的記錄
-            filteredRecords = records.filter(record => {
-                try {
-                    const recordDate = convertToDateObj(record.date, "00:00:00");
-                    return recordDate && recordDate >= startOfWeek && record.clockOutTime;
-                } catch (e) {
-                    console.error('date error：', e, record.date);
-                    return false;
-                }
-            });
-        } else if (type === 'month') {
-            // 計算本月的開始日期
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        reportTitle = `Weekly report (${startOfWeek.toLocaleDateString('en-US', options)} to ${now.toLocaleDateString('en-US', options)})`;
 
-            reportTitle = `monthly report (${startOfMonth.toLocaleDateString('zh-TW')} to ${now.toLocaleDateString('zh-TW')})`;
-
-            // 過濾本月的記錄
-            filteredRecords = records.filter(record => {
-                try {
-                    const recordDate = convertToDateObj(record.date, "00:00:00");
-                    return recordDate &&
-                        recordDate.getMonth() === now.getMonth() &&
-                        recordDate.getFullYear() === now.getFullYear() &&
-                        record.clockOutTime;
-                } catch (e) {
-                    console.error('date error：', e, record.date);
-                    return false;
-                }
-            });
-        }
-
-        // 計算總時數和總薪資
-        filteredRecords.forEach(record => {
-            if (record.hoursWorked && record.wage) {
-                const hours = parseFloat(record.hoursWorked);
-                const wage = parseFloat(record.wage);
-                if (!isNaN(hours)) totalHours += hours;
-                if (!isNaN(wage)) totalWage += wage;
+        // 過濾本週的記錄
+        filteredRecords = records.filter(record => {
+            try {
+                const recordDate = convertToDateObj(record.date, "00:00:00");
+                return recordDate && recordDate >= startOfWeek && record.clockOutTime;
+            } catch (e) {
+                console.error('Error parsing date for report:', e, record.date);
+                return false;
             }
         });
+    } else if (type === 'month') {
+        // 計算本月的開始日期
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // 產生報表內容
-        let reportContent = `${reportTitle}\n\n`;
-        reportContent += `Total work hours： ${totalHours.toFixed(1)} 小時\n`;
-        reportContent += `Total wage： NT$${totalWage.toFixed(0)}\n\n`;
-        reportContent += 'Details：\n';
+        reportTitle = `Monthly report (${startOfMonth.toLocaleDateString('en-US', options)} to ${now.toLocaleDateString('en-US', options)})`;
 
-        filteredRecords.forEach(record => {
-            const hoursDisplay = record.hoursWorked || '0.0';
-            const wageDisplay = record.wage || '0';
-            reportContent += `Date： ${record.date}, Clock-in Time： ${record.clockInTime}, Clock-out Time： ${record.clockOutTime}, Hours： ${hoursDisplay}, Wage： NT$${wageDisplay}\n`;
+        // 過濾本月的記錄
+        filteredRecords = records.filter(record => {
+            try {
+                const recordDate = convertToDateObj(record.date, "00:00:00");
+                return recordDate &&
+                    recordDate.getMonth() === now.getMonth() &&
+                    recordDate.getFullYear() === now.getFullYear() &&
+                    record.clockOutTime;
+            } catch (e) {
+                console.error('Error parsing date for report:', e, record.date);
+                return false;
+            }
         });
-
-        // 顯示報表
-        alert(reportContent);
-
-        // 提供下載報表功能
-        const blob = new Blob([reportContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${type === 'week' ? 'weekly report' : 'monthly report'}_${now.toLocaleDateString('zh-TW').replace(/\//g, '-')}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     }
+
+    // 計算總時數和總薪資
+    filteredRecords.forEach(record => {
+        if (record.hoursWorked && record.wage) {
+            const hours = parseFloat(record.hoursWorked);
+            const wage = parseFloat(record.wage);
+            if (!isNaN(hours)) totalHours += hours;
+            if (!isNaN(wage)) totalWage += wage;
+        }
+    });
+
+    // 產生報表內容
+    let reportContent = `${reportTitle}\n\n`;
+    reportContent += `Total work hours: ${totalHours.toFixed(1)} hours\n`;
+    reportContent += `Total wage: NT$${totalWage.toFixed(0)}\n\n`;
+    reportContent += 'Details:\n';
+
+    filteredRecords.forEach(record => {
+        const hoursDisplay = record.hoursWorked || '0.0';
+        const wageDisplay = record.wage || '0';
+        reportContent += `Date: ${record.date}, Clock-in Time: ${record.clockInTime}, Clock-out Time: ${record.clockOutTime}, Hours: ${hoursDisplay}, Wage: NT$${wageDisplay}\n`;
+    });
+
+    // 顯示報表
+    alert(reportContent);
+
+    // 提供下載報表功能
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${type === 'week' ? 'weekly_report' : 'monthly_report'}_${now.toLocaleDateString('en-US', options).replace(/\//g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
     // 清除資料
     clearDataBtn.addEventListener('click', function() {
@@ -808,76 +821,83 @@
     });
 
     // 更新記錄顯示
-    function updateRecordsDisplay() {
-        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-        // 清空表格
-        recordsBody.innerHTML = '';
+function updateRecordsDisplay() {
+    const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    // 清空表格
+    recordsBody.innerHTML = '';
 
-        // 倒序顯示最近的記錄（最多顯示5條）
-        const recentRecords = [...records].reverse().slice(0, 5);
+    // 倒序顯示最近的記錄（最多顯示5條）
+    const recentRecords = [...records].reverse().slice(0, 5);
 
-        // 添加記錄到表格
-        recentRecords.forEach(record => {
-            const row = document.createElement('tr');
+    // 添加記錄到表格
+    recentRecords.forEach(record => {
+        const row = document.createElement('tr');
 
-            const dateCell = document.createElement('td');
-            dateCell.textContent = record.date;
-            row.appendChild(dateCell);
+        const dateCell = document.createElement('td');
+        // 日期顯示為英文格式 (MM/DD/YYYY)
+        dateCell.textContent = record.date;
+        row.appendChild(dateCell);
 
-            const clockInCell = document.createElement('td');
-            clockInCell.textContent = record.clockInTime;
-            row.appendChild(clockInCell);
+        const clockInCell = document.createElement('td');
+        clockInCell.textContent = record.clockInTime;
+        row.appendChild(clockInCell);
 
-            const clockOutCell = document.createElement('td');
-            clockOutCell.textContent = record.clockOutTime || '--';
-            row.appendChild(clockOutCell);
+        const clockOutCell = document.createElement('td');
+        clockOutCell.textContent = record.clockOutTime || '--';
+        row.appendChild(clockOutCell);
 
-            const hoursCell = document.createElement('td');
-            hoursCell.textContent = record.hoursWorked ? `${record.hoursWorked} 小時` : '--';
-            row.appendChild(hoursCell);
+        const hoursCell = document.createElement('td');
+        hoursCell.textContent = record.hoursWorked ? `${record.hoursWorked} hours` : '--';
+        row.appendChild(hoursCell);
 
-            const wageCell = document.createElement('td');
-            wageCell.textContent = record.wage ? `NT$${record.wage}` : '--';
-            row.appendChild(wageCell);
+        const wageCell = document.createElement('td');
+        wageCell.textContent = record.wage ? `NT$${record.wage}` : '--';
+        row.appendChild(wageCell);
 
-            recordsBody.appendChild(row);
-        });
-    }
-
+        recordsBody.appendChild(row);
+    });
+}
     // 初始化記錄顯示
     // updateRecordsDisplay(); // 這行可以在 window.onload 中執行，避免重複
 
     // 檢查是否正在打卡中（頁面刷新後恢復狀態）
-    function checkClockInStatus() {
-        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-        if (records.length > 0) {
-            const lastRecord = records[records.length - 1];
-            // 檢查最後一筆記錄是否有上班時間但沒有下班時間
-            if (lastRecord.clockInTime && !lastRecord.clockOutTime) {
-                isClockIn = true; // 將狀態設置為已打卡上班
-                // 更新UI
-                statusElement.textContent = `上班中 - 打卡時間： ${lastRecord.clockInTime}`;
-                statusElement.className = 'status clocked-in';
-                clockInBtn.disabled = true;
-                clockOutBtn.disabled = false;
-            } else {
-                isClockIn = false; // 如果最後一筆記錄已下班，則設置為未打卡
-                statusElement.textContent = 'Status: Not clocked in';
-                statusElement.className = 'status';
-                clockInBtn.disabled = false;
-                clockOutBtn.disabled = true;
-            }
+function checkClockInStatus() {
+    const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    if (records.length > 0) {
+        const lastRecord = records[records.length - 1];
+        // 檢查最後一筆記錄是否有上班時間但沒有下班時間
+        if (lastRecord.clockInTime && !lastRecord.clockOutTime) {
+            isClockIn = true; // 將狀態設置為已打卡上班
+            // 更新UI
+            statusElement.textContent = `Clocked in: In Work Mode - Time: ${lastRecord.clockInTime}`;
+            statusElement.className = 'status clocked-in';
+            clockInBtn.disabled = true;
+            clockOutBtn.disabled = false;
         } else {
-            isClockIn = false; // 如果沒有任何記錄，則為未打卡
+            isClockIn = false; // 如果最後一筆記錄已下班，則設置為未打卡
             statusElement.textContent = 'Status: Not clocked in';
             statusElement.className = 'status';
             clockInBtn.disabled = false;
             clockOutBtn.disabled = true;
         }
+    } else {
+        isClockIn = false; // 如果沒有任何記錄，則為未打卡
+        statusElement.textContent = 'Status: Not clocked in';
+        statusElement.className = 'status';
+        clockInBtn.disabled = false;
+        clockOutBtn.disabled = true;
     }
+}
 
     // 頁面載入時檢查打卡狀態，確保在 DOM 完全載入後執行
-    window.addEventListener('DOMContentLoaded', checkClockInStatus);
+window.addEventListener('DOMContentLoaded', function() {
+    // 載入時薪設置 (保留，確保在檢查打卡狀態前載入時薪)
+    if (localStorage.getItem('hourlyRate')) {
+        hourlyRateInput.value = localStorage.getItem('hourlyRate');
+    }
+    checkClockInStatus();
+    updateRecordsDisplay(); // 確保顯示的記錄格式也是英文
+});
 
 </script>
 </body>
