@@ -12,7 +12,7 @@
         background-color: #f5f5f5;
     }
     
-    /* 登入相關樣式 */
+    /* login style */
     .login-container {
       max-width: 400px;
       margin: 100px auto;
@@ -56,7 +56,7 @@
     
 
     
-    /* 打卡系統樣式 */
+    /* system style */
     .container {
         max-width: 500px;
         margin: 0 auto;
@@ -222,7 +222,7 @@
 </head>
 <body>
 
-  <!-- 登入介面 -->
+  <!-- login interface -->
   <div class="login-container" id="login-container">
     <h2>Login</h2>
     
@@ -234,17 +234,17 @@
     </div>
   </div>
 
-  <!-- 打卡系統容器，登入後顯示 -->
+  <!-- system container, pop up after logging in -->
   <div class="container" id="punch-container">
     <h1>Clock-in System⏳</h1>
-    <!-- 時間顯示卡片 -->
+    <!-- time card -->
     <div class="card">
         <div>Current Time</div>
         <div class="time-display" id="current-time">00:00:00</div>
         <div class="status" id="status">Status：Not clocked in</div>
     </div>
 
-    <!-- 時薪設置卡片 -->
+    <!-- wage card -->
     <div class="card">
         <div>Settings</div>
         <div class="settings">
@@ -253,7 +253,7 @@
         </div>
     </div>
 
-    <!-- 打卡按鈕卡片 -->
+    <!-- bottom card -->
     <div class="card">
         <div class="button-container">
             <button id="clock-in-btn" class="clock-in">Clock-in</button>
@@ -261,7 +261,7 @@
         </div>
     </div>
 
-    <!-- 報表按鈕卡片 -->
+    <!-- report card -->
     <div class="card">
         <div class="report-buttons">
             <button id="weekly-report-btn" class="report-button">Export weekly report</button>
@@ -272,7 +272,7 @@
         <button id="logout-btn" class="logout-btn">Logout</button>
     </div>
 
-    <!-- 記錄列表卡片 -->
+    <!-- record card -->
     <div class="card">
         <h3>Recent records</h3>
         <div id="records-container">
@@ -287,7 +287,7 @@
                     </tr>
                 </thead>
                 <tbody id="records-body">
-                    <!-- 記錄將在此動態加載 -->
+                    <!-- Records will be loaded here -->
                 </tbody>
             </table>
         </div>
@@ -296,11 +296,11 @@
   </div>
 
 <script>
-    // 設定帳號密碼
+    // set username and password
     const CORRECT_USERNAME = "admin";
     const CORRECT_PASSWORD = "123456";
 
-    // DOM元素
+    // DOM elements
     const loginContainer = document.getElementById('login-container');
     const punchContainer = document.getElementById('punch-container');
     const usernameInput = document.getElementById('username');
@@ -319,43 +319,43 @@
     const fixRecordsBtn = document.getElementById('fix-records-btn');
     const recordsBody = document.getElementById('records-body');
 
-    // 程式狀態
-    // let clockInTime = null; // 這個變數不再需要儲存上次打卡的時間，因為會直接從 localStorage 獲取
-    let isClockIn = false; // 只用來判斷是否處於打卡上班狀態
+    // system situation
+    // let clockInTime = null; 
+    let isClockIn = false; 
 
-// 改進的日期時間轉換函數
+// convert to date object
 function convertToDateObj(dateStr, timeStr) {
     try {
-        // 檢查輸入
+        // check input
         if (!dateStr || !timeStr) {
-            console.warn('日期或時間字串為空:', dateStr, timeStr);
+            console.warn('Date or time string is empty:', dateStr, timeStr);
             return null;
         }
 
         let year, month, day;
 
-        // 嘗試解析日期格式 (MM/DD/YYYY 或 YYYY/MM/DD 或 YYYY-MM-DD)
+        // date (MM/DD/YYYY or YYYY/MM/DD or YYYY-MM-DD)
         const dateMatchMDY = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); // MM/DD/YYYY
-        const dateMatchYMD = dateStr.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); // YYYY/MM/DD 或 YYYY-MM-DD
+        const dateMatchYMD = dateStr.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); // YYYY/MM/DD or YYYY-MM-DD
 
         if (dateMatchMDY) {
-            month = parseInt(dateMatchMDY[1], 10) - 1; // 月份從0開始
+            month = parseInt(dateMatchMDY[1], 10) - 1; // month starts from 0
             day = parseInt(dateMatchMDY[2], 10);
             year = parseInt(dateMatchMDY[3], 10);
         } else if (dateMatchYMD) {
             year = parseInt(dateMatchYMD[1], 10);
-            month = parseInt(dateMatchYMD[2], 10) - 1; // 月份從0開始
+            month = parseInt(dateMatchYMD[2], 10) - 1; // month starts from 0
             day = parseInt(dateMatchYMD[3], 10);
         } else {
-            console.error('無法識別的日期格式：', dateStr);
+            console.error('Unrecognized date format：', dateStr);
             return null;
         }
 
         let hours = 0, minutes = 0, seconds = 0;
 
-        // 嘗試解析時間格式
-        const ampmMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)/i); // 12小時制 (e.g., "9:05:07 AM")
-        const timeMatch24 = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/); // 24小時制 (e.g., "09:05:07")
+        // time (12hr or 24hr format)
+        const ampmMatch = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?\s*(am|pm)/i); // 12hr
+        const timeMatch24 = timeStr.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/); // 24hr
 
         if (ampmMatch) {
             const ampm = ampmMatch[4].toLowerCase();
@@ -373,100 +373,100 @@ function convertToDateObj(dateStr, timeStr) {
             minutes = parseInt(timeMatch24[2], 10);
             seconds = timeMatch24[3] ? parseInt(timeMatch24[3], 10) : 0;
         } else {
-            console.error('無法識別的時間格式：', timeStr);
+            console.error('Unrecognized date format：', timeStr);
             return null;
         }
 
-        // 建立並返回 Date 對象
+        // set up date
         const date = new Date(year, month, day, hours, minutes, seconds);
 
-        // 檢查日期是否有效
+        // check if date is correct
         if (isNaN(date.getTime())) {
-            console.error('無效的日期時間組合：', dateStr, timeStr, ' -> 無法構建有效日期');
+            console.error('Invalid date and time combination：', dateStr, timeStr, ' -> Unable to construct a valid date');
             return null;
         }
 
         return date;
     } catch (e) {
-        console.error('解析日期時間出錯：', e, '日期:', dateStr, '時間:', timeStr);
+        console.error('Error parsing datetime:', e, 'date:', dateStr, 'time:', timeStr);
         return null;
     }
 }
 
-    // 將小時數向下取整到最接近的0.5小時（未滿半小時不計）
+    // Round down the hours to the nearest 0.5 hour (fractions of half an hour are not counted)
     function roundToHalfHour(hours) {
-        // 防止NaN
+        // Prevent NaN
         if (isNaN(hours) || hours <= 0) {
             return 0;
         }
-        // 將小時乘以2，向下取整，再除以2，得到0.5小時的倍數
+        // Multiply the hours by 2, round down, and divide by 2 to get multiples of 0.5 hours
         return Math.floor(hours * 2) / 2;
     }
 
-    // 將薪資四捨五入到最接近的100倍數
+    // Round the wage to the nearest multiple of 100
     function roundToHundred(wage) {
-        // 防止NaN
+        // Prevent NaN
         if (isNaN(wage) || wage <= 0) {
             return 0;
         }
         return Math.round(wage / 100) * 100;
     }
 
-    // 計算工作時數，扣除午休時間（12:00-13:00）
+    // Calculate working hours, deducting lunch breaks（12:00-13:00）
     function calculateWorkHours(clockInTime, clockOutTime) {
-        // 檢查輸入參數是否有效
+        // Check if the input parameters are valid
         if (!clockInTime || !clockOutTime ||
             !(clockInTime instanceof Date) || !(clockOutTime instanceof Date) ||
             isNaN(clockInTime.getTime()) || isNaN(clockOutTime.getTime())) {
-            console.error('無效的時間參數：', clockInTime, clockOutTime);
+            console.error('Invalid time parameter：', clockInTime, clockOutTime);
             return 0;
         }
 
-        // 創建日期副本避免修改原始對象
+        // Create a copy of the date to avoid modifying the original object
         const clockIn = new Date(clockInTime);
         const clockOut = new Date(clockOutTime);
 
-        // 檢查下班時間是否早於上班時間（可能是跨天）
+        // Check if the end time is earlier than the start time (may be across days)
         if (clockOut < clockIn) {
-            // 假設是跨天打卡，增加一天
+            // If clock in across days, add one day
             clockOut.setDate(clockOut.getDate() + 1);
         }
 
-        // 設定午休時間
+        // Lunch break
         const lunchBreakStart = new Date(clockIn);
         lunchBreakStart.setHours(12, 0, 0, 0);
 
         const lunchBreakEnd = new Date(clockIn);
         lunchBreakEnd.setHours(13, 0, 0, 0);
 
-        // 檢查是否需要調整午休時間到下一天
+        // Check if lunch break time needs to be adjusted to the next day
         if (clockIn.getHours() >= 13) {
             lunchBreakStart.setDate(lunchBreakStart.getDate() + 1);
             lunchBreakEnd.setDate(lunchBreakEnd.getDate() + 1);
         }
 
-        // 計算初始工時（小時）
+        // calculate work hours (hr)
         let workHours = (clockOut - clockIn) / (1000 * 60 * 60);
 
-        // 檢查是否需要扣除午休時間
-        // 情況1：上班和下班時間都在午休時間之外，但跨越了午休時間
+        // Check if lunch break time needs to be deducted
+        // Case 1: The start and end times are outside the lunch break, but span the lunch break
         if (clockIn < lunchBreakStart && clockOut > lunchBreakEnd) {
-            workHours -= 1; // 扣除1小時午休
+            workHours -= 1; // Deduct 1 hour lunch break
         }
-        // 情況2：上班時間在午休開始之前，下班時間在午休時間內
+        // Case 2: The working hours are before the lunch break, and the working hours are during the lunch break
         else if (clockIn < lunchBreakStart && clockOut > lunchBreakStart && clockOut <= lunchBreakEnd) {
             workHours -= (clockOut - lunchBreakStart) / (1000 * 60 * 60);
         }
-        // 情況3：上班時間在午休時間內，下班時間在午休結束之後
+        // Situation 3: Working hours fall during lunch break, and leaving get off work is after lunch break
         else if (clockIn >= lunchBreakStart && clockIn < lunchBreakEnd && clockOut > lunchBreakEnd) {
             workHours -= (lunchBreakEnd - clockIn) / (1000 * 60 * 60);
         }
-        // 情況4：上班和下班時間都在午休時間內
+        // Situation 4: Both the start and end of get off work are during the lunch break
         else if (clockIn >= lunchBreakStart && clockOut <= lunchBreakEnd) {
-            workHours = 0; // 全部時間都在午休內，實際工作時間為0
+            workHours = 0; // All time is within lunch break, actual working time is 0
         }
 
-        // 如果跨了多天，檢查是否需要扣除第二天的午休
+        // If it spans multiple days, check whether the lunch break of the next day needs to be deducted
         if (clockOut.getDate() > clockIn.getDate()) {
             const nextDayLunchStart = new Date(lunchBreakStart);
             nextDayLunchStart.setDate(nextDayLunchStart.getDate() + 1);
@@ -474,7 +474,7 @@ function convertToDateObj(dateStr, timeStr) {
             const nextDayLunchEnd = new Date(lunchBreakEnd);
             nextDayLunchEnd.setDate(nextDayLunchEnd.getDate() + 1);
 
-            // 類似上面的邏輯，但檢查第二天的午休時間
+            // Similar logic as above, but checks the lunch break time of the next day
             if (clockIn < nextDayLunchStart && clockOut > nextDayLunchEnd) {
                 workHours -= 1;
             } else if (clockIn < nextDayLunchStart && clockOut > nextDayLunchStart && clockOut <= nextDayLunchEnd) {
@@ -482,65 +482,65 @@ function convertToDateObj(dateStr, timeStr) {
             }
         }
 
-        return workHours > 0 ? workHours : 0; // 確保不會返回負數
+        return workHours > 0 ? workHours : 0; // Make sure no negative numbers are returned
     }
 
-    // 登入功能
+    // login
     loginButton.addEventListener('click', function() {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
         if (username === CORRECT_USERNAME && password === CORRECT_PASSWORD) {
-            // 登入成功
+            // Login successful
             loginContainer.style.display = 'none';
             punchContainer.style.display = 'block';
 
-            // 設置登入狀態
+            // set login
             sessionStorage.setItem('isLoggedIn', 'true');
         } else {
-            // 登入失敗
+            // Login unsuccessful
             errorMessage.style.display = 'block';
 
-            // 3秒後隱藏錯誤訊息
+            // Hide error message after 3 seconds
             setTimeout(() => {
                 errorMessage.style.display = 'none';
             }, 3000);
         }
     });
 
-    // 登出功能
+    // logout
     logoutBtn.addEventListener('click', function() {
         punchContainer.style.display = 'none';
         loginContainer.style.display = 'block';
 
-        // 清除登入狀態
+        // clear logout
         sessionStorage.removeItem('isLoggedIn');
 
-        // 清空輸入欄位
+        // clear input
         usernameInput.value = '';
         passwordInput.value = '';
     });
 
-    // 檢查登入狀態（頁面載入時）
+    // Check login status (on page load)
     window.addEventListener('load', function() {
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             loginContainer.style.display = 'none';
             punchContainer.style.display = 'block';
         }
 
-        // 載入時薪設置
+        // Load wage settings
         if (localStorage.getItem('hourlyRate')) {
             hourlyRateInput.value = localStorage.getItem('hourlyRate');
         }
 
-        // 初始化記錄顯示
+        // Initialize record display
         updateRecordsDisplay();
 
-        // 檢查打卡狀態
+        // Check punch-in status
         checkClockInStatus();
     });
 
-    // 設置時薪的本地儲存
+    // Set up local storage for wages
     hourlyRateInput.addEventListener('change', function() {
         const rate = parseFloat(this.value);
         if (!isNaN(rate) && rate > 0) {
@@ -550,10 +550,10 @@ function convertToDateObj(dateStr, timeStr) {
         }
     });
 
-// 更新當前時間
+// Update current time
 function updateCurrentTime() {
     const now = new Date();
-    // 使用 'en-US' 語言環境，並指定選項來顯示 12 小時制和 AM/PM
+    // Use the 'en-US' locale and specify options to display the 12-hour clock and AM/PM
     const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     document.getElementById("current-time").textContent = timeString;
 }
@@ -561,7 +561,7 @@ function updateCurrentTime() {
 setInterval(updateCurrentTime, 1000);
 updateCurrentTime();
 
-    // 上班打卡
+    // clockin
 clockInBtn.addEventListener('click', function() {
     const now = new Date();
     isClockIn = true;
@@ -569,42 +569,42 @@ clockInBtn.addEventListener('click', function() {
     const clockInTimeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     const clockInDateString = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-    // 更新狀態
+    // Update Status
     statusElement.textContent = `Clocked in: In Work Mode - Time: ${clockInTimeString}`;
     statusElement.className = 'status clocked-in';
 
-    // 禁用/啟用按鈕
+    // Disable/Enable Button
     clockInBtn.disabled = true;
     clockOutBtn.disabled = false;
 
-    // 保存記錄
+    // save record
     const record = {
-        date: clockInDateString, // 日期也改為英文格式 (MM/DD/YYYY)
+        date: clockInDateString, 
         clockInTime: clockInTimeString,
         clockOutTime: null,
         hoursWorked: null,
         wage: null
     };
 
-    // 獲取現有記錄
+    // get current records
     let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
     records.push(record);
     localStorage.setItem('workRecords', JSON.stringify(records));
 
-    // 更新顯示
+    // update display
     updateRecordsDisplay();
 
-    // 顯示通知
+    // show alert
     alert(`Clocked in: In Work Mode - Time: ${clockInTimeString}`);
 });
 
-   // 下班打卡
+   // clockout
 clockOutBtn.addEventListener('click', function() {
     if (!isClockIn) return;
 
     const clockOutTime = new Date();
 
-    // 獲取現有記錄並找到最後一筆未打下班的記錄
+    // Get the existing records and find the last unchecked record
     let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
     const lastRecordIndex = records.findIndex(record => record.clockInTime && !record.clockOutTime);
 
@@ -615,7 +615,7 @@ clockOutBtn.addEventListener('click', function() {
 
     let lastRecord = records[lastRecordIndex];
 
-    // 從記錄中獲取上班時間的 Date 物件
+    // Get the Date object of the working time from the record
     const clockInDateObj = convertToDateObj(lastRecord.date, lastRecord.clockInTime);
 
     if (!clockInDateObj) {
@@ -624,44 +624,44 @@ clockOutBtn.addEventListener('click', function() {
         return;
     }
 
-    // 計算工時
+    // calculate work hours
     const workHours = calculateWorkHours(clockInDateObj, clockOutTime);
 
-    // 將工時四捨五入到最接近的0.5小時
+    // Round working hours to the nearest 0.5 hour
     const roundedHours = roundToHalfHour(workHours);
 
-    // 獲取時薪，確保有效
+    // Get hourly wages and ensure effectiveness
     const hourlyRate = parseFloat(hourlyRateInput.value) || 180;
 
-    // 計算薪資並四捨五入到最接近的100倍數
+    // Calculate salary and round to the nearest 100
     const wage = roundToHundred(roundedHours * hourlyRate);
 
-    // 更新狀態
+    // update status
     statusElement.textContent = 'Status: Not clocked in';
     statusElement.className = 'status';
 
-    // 禁用/啟用按鈕
+    // Disable/Enable Button
     clockInBtn.disabled = false;
     clockOutBtn.disabled = true;
 
-    // 更新記錄
+    // update records
     lastRecord.clockOutTime = clockOutTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     lastRecord.hoursWorked = roundedHours.toFixed(1);
     lastRecord.wage = wage.toFixed(0);
     localStorage.setItem('workRecords', JSON.stringify(records));
 
-    // 更新顯示
+    // update dipslay
     updateRecordsDisplay();
 
-    // 重置狀態
+    // reset status
     isClockIn = false;
 
-    // 顯示通知
+    // show alert
     alert(`Clocked out: Freedom unlocked! - Time: ${lastRecord.clockOutTime}\nTotal work hours: ${workHours.toFixed(2)} hours\nRounded work hours: ${roundedHours.toFixed(1)} hours\nWage: NT$${wage.toFixed(0)}`);
 });
 
 
-    // 修復記錄按鈕
+    // fix record bottom
     fixRecordsBtn.addEventListener('click', function() {
         if (confirm('This is going to recount all the records, still continue?')) {
             const fixedCount = fixAllRecords();
@@ -669,7 +669,7 @@ clockOutBtn.addEventListener('click', function() {
         }
     });
 
-    // 修復所有記錄
+    // fix all records
     function fixAllRecords() {
         let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
         const hourlyRate = parseFloat(hourlyRateInput.value) || 180;
@@ -677,19 +677,19 @@ clockOutBtn.addEventListener('click', function() {
         let fixedCount = 0;
 
         records.forEach((record, index) => {
-            // 只處理有上班和下班時間的記錄
+            // Only process records with working and leaving times
             if (record.clockInTime && record.clockOutTime) {
-                // 使用改進的日期時間轉換函數
+                // Use improved datetime conversion functions
                 const clockIn = convertToDateObj(record.date, record.clockInTime);
                 const clockOut = convertToDateObj(record.date, record.clockOutTime);
 
                 if (clockIn && clockOut) {
-                    // 計算正確的工時和薪資
+                    // Calculate correct hours and wages
                     const workHours = calculateWorkHours(clockIn, clockOut);
                     const roundedHours = roundToHalfHour(workHours);
                     const wage = roundToHundred(roundedHours * hourlyRate);
 
-                    // 更新記錄
+                    // update records
                     record.hoursWorked = roundedHours.toFixed(1);
                     record.wage = wage.toFixed(0);
                     fixedCount++;
@@ -697,16 +697,16 @@ clockOutBtn.addEventListener('click', function() {
             }
         });
 
-        // 保存更新的記錄
+        // save updated records
         localStorage.setItem('workRecords', JSON.stringify(records));
 
-        // 更新顯示
+        // update display
         updateRecordsDisplay();
 
         return fixedCount;
     }
 
-    // 報表功能 (修改 generateReport 函式)
+    // report
 weeklyReportBtn.addEventListener('click', function() {
     generateReport('week');
 });
@@ -715,7 +715,7 @@ monthlyReportBtn.addEventListener('click', function() {
     generateReport('month');
 });
 
-    // 產生報表
+    // generate report
 function generateReport(type) {
     const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
     if (records.length === 0) {
@@ -732,14 +732,14 @@ function generateReport(type) {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
 
     if (type === 'week') {
-        // 計算本週的開始日期（週日）
+        // Calculate the start of the week (Sunday)
         const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
         startOfWeek.setHours(0, 0, 0, 0);
 
         reportTitle = `Weekly report (${startOfWeek.toLocaleDateString('en-US', options)} to ${now.toLocaleDateString('en-US', options)})`;
 
-        // 過濾本週的記錄
+        // Filter records for this week
         filteredRecords = records.filter(record => {
             try {
                 const recordDate = convertToDateObj(record.date, "00:00:00");
@@ -750,12 +750,12 @@ function generateReport(type) {
             }
         });
     } else if (type === 'month') {
-        // 計算本月的開始日期
+        // Calculate the start of the month
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         reportTitle = `Monthly report (${startOfMonth.toLocaleDateString('en-US', options)} to ${now.toLocaleDateString('en-US', options)})`;
 
-        // 過濾本月的記錄
+        // Filter records for this month
         filteredRecords = records.filter(record => {
             try {
                 const recordDate = convertToDateObj(record.date, "00:00:00");
@@ -770,7 +770,7 @@ function generateReport(type) {
         });
     }
 
-    // 計算總時數和總薪資
+    // Calculate total hours and total wages
     filteredRecords.forEach(record => {
         if (record.hoursWorked && record.wage) {
             const hours = parseFloat(record.hoursWorked);
@@ -780,7 +780,7 @@ function generateReport(type) {
         }
     });
 
-    // 產生報表內容
+    // generate report contents
     let reportContent = `${reportTitle}\n\n`;
     reportContent += `Total work hours: ${totalHours.toFixed(1)} hours\n`;
     reportContent += `Total wage: NT$${totalWage.toFixed(0)}\n\n`;
@@ -792,10 +792,10 @@ function generateReport(type) {
         reportContent += `Date: ${record.date}, Clock-in Time: ${record.clockInTime}, Clock-out Time: ${record.clockOutTime}, Hours: ${hoursDisplay}, Wage: NT$${wageDisplay}\n`;
     });
 
-    // 顯示報表
+    // display report
     alert(reportContent);
 
-    // 提供下載報表功能
+    // download report
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -807,14 +807,13 @@ function generateReport(type) {
     URL.revokeObjectURL(url);
 }
 
-    // 清除資料
+    // clear records
     clearDataBtn.addEventListener('click', function() {
         if (confirm('Are you sure you want to delete all clock-in records? This action cannot be undone!')) {
             localStorage.removeItem('workRecords');
             updateRecordsDisplay();
-            alert('所有記錄已清除！');
-            // 清除後也要重置打卡狀態
-            isClockIn = false;
+            alert('All records are cleared!');
+            // reset clockin status after clearing all the records.
             clockInBtn.disabled = false;
             clockOutBtn.disabled = true;
             statusElement.textContent = 'Status：Not clocked in';
@@ -822,21 +821,20 @@ function generateReport(type) {
         }
     });
 
-    // 更新記錄顯示
+    // update records display
 function updateRecordsDisplay() {
     const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-    // 清空表格
+    // clear table
     recordsBody.innerHTML = '';
 
-    // 倒序顯示最近的記錄（最多顯示5條）
+    // Display the most recent records in reverse order (up to 5 records)
     const recentRecords = [...records].reverse().slice(0, 5);
 
-    // 添加記錄到表格
+    // Add records to table
     recentRecords.forEach(record => {
         const row = document.createElement('tr');
 
         const dateCell = document.createElement('td');
-        // 日期顯示為英文格式 (MM/DD/YYYY)
         dateCell.textContent = record.date;
         row.appendChild(dateCell);
 
@@ -859,31 +857,31 @@ function updateRecordsDisplay() {
         recordsBody.appendChild(row);
     });
 }
-    // 初始化記錄顯示
-    // updateRecordsDisplay(); // 這行可以在 window.onload 中執行，避免重複
+    // Initialize record display
+    // updateRecordsDisplay(); // This line can be executed in window.onload to avoid duplication
 
-    // 檢查是否正在打卡中（頁面刷新後恢復狀態）
+    // Check if you are currently clocking in (restore status after page refresh)
 function checkClockInStatus() {
     const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
     if (records.length > 0) {
         const lastRecord = records[records.length - 1];
-        // 檢查最後一筆記錄是否有上班時間但沒有下班時間
+        // Check if the last record has working time but no off-working time
         if (lastRecord.clockInTime && !lastRecord.clockOutTime) {
-            isClockIn = true; // 將狀態設置為已打卡上班
-            // 更新UI
+            isClockIn = true; // Set status to Clocked in
+            // Update UI
             statusElement.textContent = `Clocked in: In Work Mode - Time: ${lastRecord.clockInTime}`;
             statusElement.className = 'status clocked-in';
             clockInBtn.disabled = true;
             clockOutBtn.disabled = false;
         } else {
-            isClockIn = false; // 如果最後一筆記錄已下班，則設置為未打卡
+            isClockIn = false; // If the last record is off duty, it will be set as not clocked in
             statusElement.textContent = 'Status: Not clocked in';
             statusElement.className = 'status';
             clockInBtn.disabled = false;
             clockOutBtn.disabled = true;
         }
     } else {
-        isClockIn = false; // 如果沒有任何記錄，則為未打卡
+        isClockIn = false; // If there is no record, it means the card was not punched.
         statusElement.textContent = 'Status: Not clocked in';
         statusElement.className = 'status';
         clockInBtn.disabled = false;
@@ -891,17 +889,18 @@ function checkClockInStatus() {
     }
 }
 
-    // 頁面載入時檢查打卡狀態，確保在 DOM 完全載入後執行
+    // Check the punch status when the page loads to ensure that it is executed after the DOM is fully loaded
 window.addEventListener('DOMContentLoaded', function() {
-    // 載入時薪設置 (保留，確保在檢查打卡狀態前載入時薪)
+    // Load wage settings (reserved, make sure to load hourly wages before checking punch status)
     if (localStorage.getItem('hourlyRate')) {
         hourlyRateInput.value = localStorage.getItem('hourlyRate');
     }
     checkClockInStatus();
-    updateRecordsDisplay(); // 確保顯示的記錄格式也是英文
+    updateRecordsDisplay(); // Make sure the record format displayed is also English
 });
 
 </script>
 </body>
 </html>
+
 
