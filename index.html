@@ -221,14 +221,19 @@
 
     /* delete botton style */
     .delete-btn {
+    /* Make sure the width can be adjusted automatically */
+      width: auto; 
+    /* Make sure the padding completely covers the text */
+      padding: 5px 10px;
       background-color: #f44336;
       color: white;
       border: none;
       border-radius: 4px;
-      padding: 5px 10px;
       cursor: pointer;
       font-size: 14px;
       transition: background-color 0.3s;
+    /* Add box-sizing here to ensure that padding does not affect the overall width calculation */
+      box-sizing: border-box; 
     }
 
     .delete-btn:hover {
@@ -856,6 +861,7 @@
   
 </body>
 </html>
+
 
 
 
