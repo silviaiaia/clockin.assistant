@@ -1,8 +1,4 @@
-https://silviaiaia.github.io/clockin.assistant
-
-Beep in, beep out 🤖
-
----
+<img src="https://capsule-render.vercel.app/api?type=soft&color=FFED97&height=100&section=header&text=Beep%20in,%20Beep%20out%20🤖&fontSize=40&animation=blinking" />
 
 This is a simple clockin system.
 
