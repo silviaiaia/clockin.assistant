@@ -50,8 +50,8 @@ This system is browser-based, and built with pure HTML, CSS, and JavaScript. It 
 5.  **View Records** : Your records are displayed in the "Recent records" table. You can use the "Delete" button next to each entry to remove it.
 6.  **Generate Reports** : Click "Export weekly report" or "Export monthly report" to download a summary of your work hours and earnings for the selected period.
 7.  **Manage Data**:
-  - If you change your hourly wage and want to update past records, click **"Fix records"**.
-  - To permanently delete all data, click **"Clear all data"**.
+    - If you change your hourly wage and want to update past records, click **"Fix records"**.
+    - To permanently delete all data, click **"Clear all data"**.
 
 ---
 
