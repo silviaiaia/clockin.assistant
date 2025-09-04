@@ -1,4 +1,4 @@
-<img src="https://capsule-render.vercel.app/api?type=soft&color=0:FFD9EC,100:FF79BC&height=100&section=header&text=Beep%20🤖&fontSize=40&fontAlignY=60&animation=blinking" />
+<img src="https://capsule-render.vercel.app/api?type=soft&color=FFD9EC&height=100&section=header&text=Beep%20🤖&fontSize=40&fontAlignY=60&animation=blinking" />
 
 ### This is a simple clock-in system.
 
