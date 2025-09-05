@@ -177,6 +177,76 @@
     .delete-btn:hover {
       background-color: #c9302c;
     }
+
+    .edit-btn {
+      width: auto; 
+      padding: 5px 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      box-sizing: border-box; 
+    }
+
+    .edit-btn:hover {
+      background-color: #45a049;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .cancel-btn {
+      background-color: #f44336;
+      color: white;
+    }
     
   </style>
 </head>
@@ -244,6 +314,28 @@
 
     <div style="text-align: center; margin-top: 20px; padding: 10px; color: #666; font-size: 14px;">
       Copyright © 2025 silviaiaia
+    </div>
+
+    <div id="edit-modal" class="modal">
+      <div class="modal-content">
+        <h3>Edit records/h3>
+        <div>
+          <label>Date：</label>
+          <input type="date" id="edit-date" class="modal-input">
+        </div>
+        <div>
+          <label>Clock-in time：</label>
+          <input type="time" id="edit-clock-in" class="modal-input">
+        </div>
+        <div>
+          <label>Clock-out time：</label>
+          <input type="time" id="edit-clock-out" class="modal-input">
+        </div>
+        <div class="modal-buttons">
+          <button id="save-edit-btn" class="modal-btn save-btn">save</button>
+          <button id="cancel-edit-btn" class="modal-btn cancel-btn">cancel</button>
+        </div>
+      </div>
     </div>
     
   </div>
@@ -675,6 +767,11 @@
             deleteBtn.textContent = 'Delete';
             deleteBtn.classList.add('delete-btn');
 
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.classList.add('edit-btn');
+            editBtn.style.marginRight = '5px';
+
             const originalIndex = records.length - 1 - reverseIndex;
 
             deleteBtn.addEventListener('click', () => deleteRecord(originalIndex));
@@ -719,7 +816,108 @@
         checkClockInStatus();
         updateRecordsDisplay();
     });
+
+  let editingIndex = -1;
+
+  function editRecord(index) {
+    const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    const record = records[index];
+    
+    if (!record) return;
+    
+    editingIndex = index;
+    
+    const dateParts = record.date.split('/');
+    const formattedDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+    
+    document.getElementById('edit-date').value = formattedDate;
+    
+    if (record.clockInTime) {
+        document.getElementById('edit-clock-in').value = convertTo24Hour(record.clockInTime);
+    }
+    if (record.clockOutTime) {
+        document.getElementById('edit-clock-out').value = convertTo24Hour(record.clockOutTime);
+    }
+    
+    document.getElementById('edit-modal').style.display = 'block';
+  }
+
+  function convertTo24Hour(time12h) {
+    if (!time12h || time12h === '--') return '';
+    
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes, seconds] = time.split(':');
+    
+    if (hours === '12') {
+        hours = '00';
+    }
+    if (modifier === 'PM') {
+        hours = parseInt(hours, 10) + 12;
+    }
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+  }
+
+  function convertTo12Hour(time24h) {
+    if (!time24h) return '';
+    
+    const [hours, minutes] = time24h.split(':');
+    const hour12 = ((parseInt(hours) + 11) % 12) + 1;
+    const modifier = parseInt(hours) >= 12 ? 'PM' : 'AM';
+    
+    return `${hour12}:${minutes}:00 ${modifier}`;
+  }
+
+  document.getElementById('save-edit-btn').addEventListener('click', function() {
+    const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+    const record = records[editingIndex];
+    
+    const newDate = document.getElementById('edit-date').value;
+    const newClockIn = document.getElementById('edit-clock-in').value;
+    const newClockOut = document.getElementById('edit-clock-out').value;
+    
+    const dateObj = new Date(newDate);
+    const formattedDate = `${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+    
+    record.date = formattedDate;
+    record.clockInTime = convertTo12Hour(newClockIn);
+    record.clockOutTime = newClockOut ? convertTo12Hour(newClockOut) : null;
+
+    if (record.clockInTime && record.clockOutTime) {
+        const clockIn = convertToDateObj(record.date, record.clockInTime);
+        const clockOut = convertToDateObj(record.date, record.clockOutTime);
+        
+        if (clockIn && clockOut) {
+            const workHours = calculateWorkHours(clockIn, clockOut);
+            const roundedHours = roundToHalfHour(workHours);
+            const hourlyRate = parseFloat(document.getElementById('hourly-rate').value) || 190;
+            const wage = roundToHundred(roundedHours * hourlyRate);
+            
+            record.hoursWorked = roundedHours.toFixed(1);
+            record.wage = wage.toFixed(0);
+        }
+    }
+    
+    localStorage.setItem('workRecords', JSON.stringify(records));
+    updateRecordsDisplay();
+    checkClockInStatus();
+    
+    document.getElementById('edit-modal').style.display = 'none';
+    alert('Record updated!');
+  });
+
+  document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+    document.getElementById('edit-modal').style.display = 'none';
+  });
+
+  document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+  });
+  
 </script>
   
 </body>
 </html>
+
