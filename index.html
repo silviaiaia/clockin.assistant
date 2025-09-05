@@ -161,21 +161,72 @@
       width: 100%;
     }
 
-    .delete-btn {
+    .delete-btn, .edit-btn, .save-btn, .cancel-btn {
       width: auto; 
       padding: 5px 10px;
-      background-color: #f44336;
-      color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       transition: background-color 0.3s;
       box-sizing: border-box; 
+      margin: 2px;
+    }
+
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
     }
 
     .delete-btn:hover {
       background-color: #c9302c;
+    }
+
+    .edit-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background-color: #45a049;
+    }
+
+    .save-btn {
+      background-color: #008CBA;
+      color: white;
+    }
+
+    .save-btn:hover {
+      background-color: #007B9A;
+    }
+
+    .cancel-btn {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .cancel-btn:hover {
+      background-color: #c9302c;
+    }
+
+    .edit-input {
+      width: 80px;
+      padding: 2px 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .edit-date-input {
+      width: 100px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      min-width: 100px;
     }
     
   </style>
@@ -240,7 +291,7 @@
             </table>
         </div>
     </div>
-    <div>v6</div>
+    <div>v6.1</div>
 
     <div style="text-align: center; margin-top: 20px; padding: 10px; color: #666; font-size: 14px;">
       Copyright © 2025 silviaiaia
@@ -261,6 +312,7 @@
     const recordsBody = document.getElementById('records-body');
 
     let isClockIn = false;
+    let editingIndex = -1;
 
     function convertToDateObj(dateStr, timeStr) {
         try {
@@ -395,6 +447,82 @@
         return workHours > 0 ? workHours : 0;
     }
 
+    function editRecord(index) {
+        if (editingIndex !== -1) {
+            alert('Please save or cancel the current edit first.');
+            return;
+        }
+        editingIndex = index;
+        updateRecordsDisplay();
+    }
+
+    function saveRecord(index) {
+        const row = recordsBody.children[recordsBody.children.length - 1 - (index - (JSON.parse(localStorage.getItem('workRecords') || '[]').length - recordsBody.children.length))];
+        
+        const dateInput = row.querySelector('.edit-date-input');
+        const clockInInput = row.querySelector('.edit-clockin-input');
+        const clockOutInput = row.querySelector('.edit-clockout-input');
+        
+        if (!dateInput || !clockInInput) {
+            alert('Unable to find input fields');
+            return;
+        }
+
+        const newDate = dateInput.value;
+        const newClockIn = clockInInput.value;
+        const newClockOut = clockOutInput ? clockOutInput.value : null;
+
+        if (!newDate || !newClockIn) {
+            alert('Date and clock-in time are required');
+            return;
+        }
+
+        const clockInTime = convertToDateObj(newDate, newClockIn);
+        if (!clockInTime) {
+            alert('Invalid date or clock-in time format');
+            return;
+        }
+
+        let clockOutTime = null;
+        if (newClockOut) {
+            clockOutTime = convertToDateObj(newDate, newClockOut);
+            if (!clockOutTime) {
+                alert('Invalid clock-out time format');
+                return;
+            }
+        }
+
+        let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+        records[index].date = newDate;
+        records[index].clockInTime = newClockIn;
+        
+        if (newClockOut) {
+            records[index].clockOutTime = newClockOut;
+            const workHours = calculateWorkHours(clockInTime, clockOutTime);
+            const roundedHours = roundToHalfHour(workHours);
+            const hourlyRate = parseFloat(hourlyRateInput.value) || 190;
+            const wage = roundToHundred(roundedHours * hourlyRate);
+            
+            records[index].hoursWorked = roundedHours.toFixed(1);
+            records[index].wage = wage.toFixed(0);
+        } else {
+            records[index].clockOutTime = null;
+            records[index].hoursWorked = null;
+            records[index].wage = null;
+        }
+
+        localStorage.setItem('workRecords', JSON.stringify(records));
+        editingIndex = -1;
+        updateRecordsDisplay();
+        checkClockInStatus();
+        alert('Record updated successfully!');
+    }
+
+    function cancelEdit() {
+        editingIndex = -1;
+        updateRecordsDisplay();
+    }
+
     window.addEventListener('load', function() {
         if (localStorage.getItem('hourlyRate')) {
             hourlyRateInput.value = localStorage.getItem('hourlyRate');
@@ -489,7 +617,6 @@
         isClockIn = false;
         alert(`Clocked out: Freedom unlocked! - Time: ${lastRecord.clockOutTime}\nTotal work hours: ${workHours.toFixed(2)} hours\nRounded work hours: ${roundedHours.toFixed(1)} hours\nWage: NT$${wage.toFixed(0)}`);
     });
-
 
     fixRecordsBtn.addEventListener('click', function() {
         if (confirm('This is going to recount all the records, still continue?')) {
@@ -648,18 +775,48 @@
         const reversedRecords = [...records].reverse();
 
         reversedRecords.forEach((record, reverseIndex) => {
+            const originalIndex = records.length - 1 - reverseIndex;
             const row = document.createElement('tr');
 
+            const isEditing = editingIndex === originalIndex;
+
             const dateCell = document.createElement('td');
-            dateCell.textContent = record.date;
+            if (isEditing) {
+                const dateInput = document.createElement('input');
+                dateInput.type = 'text';
+                dateInput.value = record.date;
+                dateInput.className = 'edit-input edit-date-input';
+                dateInput.placeholder = 'MM/DD/YYYY';
+                dateCell.appendChild(dateInput);
+            } else {
+                dateCell.textContent = record.date;
+            }
             row.appendChild(dateCell);
 
             const clockInCell = document.createElement('td');
-            clockInCell.textContent = record.clockInTime;
+            if (isEditing) {
+                const clockInInput = document.createElement('input');
+                clockInInput.type = 'text';
+                clockInInput.value = record.clockInTime;
+                clockInInput.className = 'edit-input edit-clockin-input';
+                clockInInput.placeholder = 'HH:MM AM/PM';
+                clockInCell.appendChild(clockInInput);
+            } else {
+                clockInCell.textContent = record.clockInTime;
+            }
             row.appendChild(clockInCell);
 
             const clockOutCell = document.createElement('td');
-            clockOutCell.textContent = record.clockOutTime || '--';
+            if (isEditing) {
+                const clockOutInput = document.createElement('input');
+                clockOutInput.type = 'text';
+                clockOutInput.value = record.clockOutTime || '';
+                clockOutInput.className = 'edit-input edit-clockout-input';
+                clockOutInput.placeholder = 'HH:MM AM/PM';
+                clockOutCell.appendChild(clockOutInput);
+            } else {
+                clockOutCell.textContent = record.clockOutTime || '--';
+            }
             row.appendChild(clockOutCell);
 
             const hoursCell = document.createElement('td');
@@ -667,19 +824,42 @@
             row.appendChild(hoursCell);
 
             const wageCell = document.createElement('td');
-            wageCell.textContent = record.wage ? `NT$${record.wage}` : '--';
+            wageCell.textContent = record.wage ? `NT${record.wage}` : '--';
             row.appendChild(wageCell);
 
             const actionCell = document.createElement('td');
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Delete';
-            deleteBtn.classList.add('delete-btn');
+            const actionButtonsDiv = document.createElement('div');
+            actionButtonsDiv.className = 'action-buttons';
 
-            const originalIndex = records.length - 1 - reverseIndex;
+            if (isEditing) {
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'save-btn';
+                saveBtn.addEventListener('click', () => saveRecord(originalIndex));
 
-            deleteBtn.addEventListener('click', () => deleteRecord(originalIndex));
-            
-            actionCell.appendChild(deleteBtn);
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'cancel-btn';
+                cancelBtn.addEventListener('click', cancelEdit);
+
+                actionButtonsDiv.appendChild(saveBtn);
+                actionButtonsDiv.appendChild(cancelBtn);
+            } else {
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit-btn';
+                editBtn.addEventListener('click', () => editRecord(originalIndex));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.addEventListener('click', () => deleteRecord(originalIndex));
+
+                actionButtonsDiv.appendChild(editBtn);
+                actionButtonsDiv.appendChild(deleteBtn);
+            }
+
+            actionCell.appendChild(actionButtonsDiv);
             row.appendChild(actionCell);
 
             recordsBody.appendChild(row);
@@ -719,8 +899,3 @@
         checkClockInStatus();
         updateRecordsDisplay();
     });
-</script>
-  
-</body>
-</html>
-
