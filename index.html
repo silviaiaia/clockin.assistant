@@ -310,7 +310,7 @@
             </table>
         </div>
     </div>
-    <div>v6</div>
+    <div>v7</div>
 
     <div style="text-align: center; margin-top: 20px; padding: 10px; color: #666; font-size: 14px;">
       Copyright © 2025 silviaiaia
@@ -318,7 +318,7 @@
 
     <div id="edit-modal" class="modal">
       <div class="modal-content">
-        <h3>Edit records/h3>
+        <h3>Edit records</h3>
         <div>
           <label>Date：</label>
           <input type="date" id="edit-date" class="modal-input">
@@ -773,9 +773,10 @@
             editBtn.style.marginRight = '5px';
 
             const originalIndex = records.length - 1 - reverseIndex;
-
+            editBtn.addEventListener('click', () => editRecord(originalIndex));
             deleteBtn.addEventListener('click', () => deleteRecord(originalIndex));
             
+            actionCell.appendChild(editBtn);
             actionCell.appendChild(deleteBtn);
             row.appendChild(actionCell);
 
@@ -920,4 +921,5 @@
   
 </body>
 </html>
+
 
